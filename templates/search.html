@@ -1,0 +1,167 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        body {
+            background: linear-gradient(-45deg, #8EC5FC, #E0C3FC, #FFD3A5, #FF9A9E);
+            background-size: 400% 400%;
+            animation: gradientBG 12s ease infinite;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+        .bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            opacity: 0.7;
+            animation: float 10s infinite ease-in-out;
+        }
+        @keyframes float {
+            0% { transform: translateY(0) scale(0.5); opacity: 1; }
+            50% { transform: translateY(-200px) scale(1); opacity: 0.8; }
+            100% { transform: translateY(-400px) scale(0.3); opacity: 0; }
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            for (let i = 0; i < 20; i++) {
+                let bubble = document.createElement("div");
+                bubble.classList.add("bubble");
+                let size = Math.random() * 20 + 10;
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
+                bubble.style.left = `${Math.random() * 100}vw`;
+                bubble.style.top = `${Math.random() * 100}vh`;
+                bubble.style.animationDuration = `${Math.random() * 5 + 5}s`;
+                document.body.appendChild(bubble);
+            }
+        });
+    </script>
+
+    <div class="container">
+        <header>
+            <nav class="navbar">
+                <a href="/" class="logo">Tweek</a>
+                <form action="search" method="POST" class="search-form">
+                    {% csrf_token %}
+                    <input type="text" id="search-input" name="username" placeholder="Search for username or posts">
+                    <button type="submit">Search</button>
+                </form>
+                <div id="search-suggestions" class="suggestions"></div>
+            </nav>
+        </header>
+
+        <main>
+            <section class="search-results">
+                <h4>Results For <span><b>{{username}}</b></span></h4>
+                <br>
+                <select id="sort-options">
+                    <option value="relevance">Sort by Relevance</option>
+                    <option value="followers">Sort by Followers</option>
+                    <option value="activity">Sort by Activity</option>
+                </select>
+                <div id="search-results">
+                    {% for users in username_profile_list %}
+                    <div class="search-item">
+                        <a href="/profile/{{users.user}}">
+                            <img class="profile-img" src="{{users.profileimg.url}}" alt="{{users.user}}">
+                        </a>
+                        <div class="user-info">
+                            <h4><a href="/profile/{{users.user}}">@{{users.user}}</a></h4>
+                            <p>{{users.location}}</p>
+                            <p>{{users.bio}}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div id="post-results">
+                    {% for post in post_search_results %}
+                    <div class="post-item">
+                        <a href="/post/{{post.id}}">
+                            <img src="{{post.image.url}}" alt="Post Image" class="post-img">
+                        </a>
+                        <p>{{ post.caption }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="pagination">
+                {% if username_profile_list.has_other_pages %}
+                <div class="pagination-controls">
+                    {% if username_profile_list.has_previous %}
+                    <a href="?page={{ username_profile_list.previous_page_number }}" class="btn">Previous</a>
+                    {% endif %}
+
+                    {% for num in username_profile_list.paginator.page_range %}
+                    {% if num == username_profile_list.number %}
+                    <strong class="current-page">{{ num }}</strong>
+                    {% else %}
+                    <a href="?page={{ num }}" class="btn">{{ num }}</a>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if username_profile_list.has_next %}
+                    <a href="?page={{ username_profile_list.next_page_number }}" class="btn">Next</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $('#search-input').on('keyup', function () {
+                let query = $(this).val();
+                if (query.length > 2) {
+                    $.ajax({
+                        url: '/live-search/',
+                        method: 'GET',
+                        data: { 'query': query },
+                        success: function (data) {
+                            $('#search-suggestions').html(data);
+                        }
+                    });
+                } else {
+                    $('#search-suggestions').html('');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
