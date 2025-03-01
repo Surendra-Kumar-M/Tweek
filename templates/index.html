@@ -61,9 +61,11 @@
         </form>
         <div class="flex items-center space-x-4 relative">
             <button id="uploadBtn" class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition-all transform hover:scale-105">Upload</button>
+
             <button id="profileBtn" class="focus:outline-none">
                 <img src="{{ user_profile.profileimg.url }}" alt="profile pic" class="w-10 h-10 rounded-full border">
             </button>
+            
             <!-- Profile Dropdown -->
             <div id="profileDropdown" class="hidden absolute right-10 top-0.5 mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
                 <a href="/setting" class="block px-4 py-2 text-gray-800 hover:bg-gray-200">Account Setting</a>
@@ -71,9 +73,27 @@
             </div>
         </div>
     </header>
+
+        <!-- Upload Section (Dropdown) -->
+
+    <div id="uploadSection" class="hidden fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+        <div class="bg-white/40 backdrop-blur-xl p-6 rounded-xl shadow-lg border border-white/20 w-96 relative">
+            <h2 class="text-xl font-semibold text-gray-900 text-center">Upload</h2>
+            <form action="upload" method="POST" enctype="multipart/form-data" class="mt-4">
+                {% csrf_token %}
+                <input type="file" name="image_upload" class="w-full p-2 border rounded-lg bg-white/70 text-gray-900 focus:ring-2 focus:ring-blue-400">
+                <textarea name="caption" placeholder="Caption..." class="w-full mt-2 p-2 border rounded-lg bg-white/70 text-gray-900 focus:ring-2 focus:ring-blue-400"></textarea>
+                <button type="submit" class="mt-2 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-all transform hover:scale-105 font-semibold">Upload</button>
+            </form>
+            <button id="closeUpload" class="mt-2 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-all">Cancel</button>
+        </div>
+    </div>
+
     
     <!-- Main Content -->
+     
     <div class="w-full max-w-6xl flex flex-col md:flex-row mt-6 gap-6 px-4">
+
         
         <!-- Left Sidebar (Posts) -->
         <div class="flex-1 space-y-6">
@@ -110,17 +130,6 @@
         <!-- Right Sidebar (Upload & Suggestions) -->
         <div class="w-full md:w-80 space-y-6">
             
-            <!-- Upload Section (Dropdown) -->
-            <div id="uploadSection" class="hidden bg-white/40 backdrop-blur-xl p-6 rounded-xl shadow-lg border border-white/20">
-                <h2 class="text-xl font-semibold text-gray-900">Upload</h2>
-                <form action="upload" method="POST" enctype="multipart/form-data" class="mt-4">
-                    {% csrf_token %}
-                    <input type="file" name="image_upload" class="w-full p-2 border rounded-lg bg-white/70 text-gray-900 focus:ring-2 focus:ring-blue-400">
-                    <textarea name="caption" placeholder="Caption..." class="w-full mt-2 p-2 border rounded-lg bg-white/70 text-gray-900 focus:ring-2 focus:ring-blue-400"></textarea>
-                    <button type="submit" class="mt-2 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-all transform hover:scale-105 font-semibold">Upload</button>
-                </form>
-            </div>
-            
             <!-- Suggestions Section -->
             <div class="bg-white/40 backdrop-blur-xl p-6 rounded-xl shadow-lg border border-white/20">
                 <h2 class="text-xl font-semibold text-gray-900">Users You Can Follow</h2>
@@ -145,6 +154,64 @@
     </div>
     
     <!-- JavaScript for Dropdowns -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadSection = document.getElementById('uploadSection');
+            const closeUpload = document.getElementById('closeUpload');
+    
+            // Show Upload Section
+            uploadBtn.addEventListener('click', function () {
+                uploadSection.classList.remove('hidden');
+            });
+    
+            // Close Upload Section
+            closeUpload.addEventListener('click', function () {
+                uploadSection.classList.add('hidden');
+            });
+    
+            // Close when clicking outside
+            uploadSection.addEventListener('click', function (event) {
+                if (event.target === uploadSection) {
+                    uploadSection.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const uploadInput = document.querySelector('input[name="image_upload"]');
+        const uploadForm = document.querySelector('form[action="upload"]');
+        const maxSizeMB = 5;
+        const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'mp4'];
+
+        uploadForm.addEventListener('submit', function (e) {
+            const file = uploadInput.files[0];
+
+            if (file) {
+                const fileExt = file.name.split('.').pop().toLowerCase();
+                if (!allowedExtensions.includes(fileExt)) {
+                    alert("Invalid file type! Allowed: " + allowedExtensions.join(", "));
+                    e.preventDefault();
+                    return;
+                }
+
+                if (file.size > maxSizeMB * 1024 * 1024) {
+                    alert("File size must be under " + maxSizeMB + "MB.");
+                    e.preventDefault();
+                    return;
+                }
+            } else {
+                alert("Please select a file to upload.");
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+
+    
     <script>
         document.getElementById('uploadBtn').addEventListener('click', function() {
             document.getElementById('uploadSection').classList.toggle('hidden');

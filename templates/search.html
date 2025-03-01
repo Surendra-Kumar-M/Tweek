@@ -7,7 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- <link rel="stylesheet" href="{% static 'css/style.css' %}"> -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         @keyframes gradientBG {
@@ -50,6 +50,37 @@
             50% { transform: translateY(-200px) scale(1); opacity: 0.8; }
             100% { transform: translateY(-400px) scale(0.3); opacity: 0; }
         }
+        .search-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.profile-img {
+    width: 40px;  /* Small image size */
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-info h4 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.user-info p {
+    margin: 0;
+    font-size: 12px;
+    color: #ddd;
+}
+
     </style>
 </head>
 
@@ -71,10 +102,10 @@
     </script>
 
     <div class="container">
-        <header>
+        <header class="w-full p-4 flex justify-between items-center bg-white/40 backdrop-blur-md shadow-lg border-b border-white/20">
             <nav class="navbar">
-                <a href="/" class="logo">Tweek</a>
-                <form action="search" method="POST" class="search-form">
+                <a href="/" class="text-3xl font-bold text-gray-900 uppercase">Tweek</a>
+                <form action="{% url 'search' %}" method="POST" class="search-form">
                     {% csrf_token %}
                     <input type="text" id="search-input" name="username" placeholder="Search for username or posts">
                     <button type="submit">Search</button>
@@ -93,15 +124,14 @@
                     <option value="activity">Sort by Activity</option>
                 </select>
                 <div id="search-results">
-                    {% for users in username_profile_list %}
+                    {% for user in username_profile_list %}
                     <div class="search-item">
-                        <a href="/profile/{{users.user}}">
-                            <img class="profile-img" src="{{users.profileimg.url}}" alt="{{users.user}}">
+                        <a href="/profile/{{ user.user }}">
+                            <img class="profile-img" src="{{ user.profileimg.url }}" alt="{{ user.user }}">
                         </a>
                         <div class="user-info">
-                            <h4><a href="/profile/{{users.user}}">@{{users.user}}</a></h4>
-                            <p>{{users.location}}</p>
-                            <p>{{users.bio}}</p>
+                            <h4><a href="/profile/{{ user.user }}">@{{ user.user }}</a></h4>
+                            <p>{{ user.location }}</p>
                         </div>
                     </div>
                     {% endfor %}
