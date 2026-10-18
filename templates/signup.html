@@ -1,153 +1,110 @@
-{% load static %}
+{% extends "base.html" %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - Tweek</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        body {
-            background: linear-gradient(-45deg, #8EC5FC, #E0C3FC, #FFD3A5, #FF9A9E);
-            background-size: 400% 400%;
-            animation: gradientBG 12s ease infinite;
-        }
-        .bubble {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-            opacity: 0.7;
-            animation: float 10s infinite ease-in-out;
-        }
-        @keyframes float {
-            0% { transform: translateY(0) scale(0.5); opacity: 1; }
-            50% { transform: translateY(-200px) scale(1); opacity: 0.8; }
-            100% { transform: translateY(-400px) scale(0.3); opacity: 0; }
-        }
-    </style>
-</head>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        for (let i = 0; i < 20; i++) {
-            let bubble = document.createElement("div");
-            bubble.classList.add("bubble");
-            let size = Math.random() * 20 + 10;
-            bubble.style.width = `${size}px`;
-            bubble.style.height = `${size}px`;
-            bubble.style.left = `${Math.random() * 100}vw`;
-            bubble.style.top = `${Math.random() * 100}vh`;
-            bubble.style.animationDuration = `${Math.random() * 5 + 5}s`;
-            document.body.appendChild(bubble);
-        }
-    });
+{% block title %}Sign Up - Tweek{% endblock %}
+{% block meta_description %}Create your Tweek account and start sharing{% endblock %}
 
-    function validatePassword() {
-        let password = document.getElementById("password").value;
-        let confirmPassword = document.getElementById("passwordc").value;
-        let validationMessage = "";
+{% block body_class %}flex items-center justify-center min-h-screen{% endblock %}
 
-        if (password.length < 8) {
-            validationMessage += "Password must be at least 8 characters long.\n";
-        }
-        if (!/[A-Z]/.test(password)) {
-            validationMessage += "Must contain at least one uppercase letter.\n";
-        }
-        if (!/[0-9]/.test(password)) {
-            validationMessage += "Must contain at least one number.\n";
-        }
-        if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-            validationMessage += "Must contain at least one special character.\n";
-        }
-        if (password !== confirmPassword) {
-            validationMessage += "Passwords do not match.\n";
-        }
-
-        document.getElementById("password-validation").innerText = validationMessage;
-        return validationMessage === "";
-    }
-</script>
-<body class="flex items-center justify-center h-screen">
-    <div class="w-full max-w-md p-8 rounded-xl shadow-lg bg-white/40 backdrop-blur-xl border border-white/20">
+{% block content %}
+    <div class="w-full max-w-md p-8 rounded-xl shadow-lg bg-white/40 backdrop-blur-xl border border-white/20 relative z-10">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-gray-900">Tweek</h1>
-            <a href="/signin" class="text-blue-600 font-semibold hover:underline">Login</a>
+            <a href="{% url 'signin' %}" class="text-blue-600 font-semibold hover:underline">Login</a>
         </div>
         <h2 class="text-2xl font-semibold text-gray-900 mb-4">Sign Up</h2>
-        {% for message in messages %}
-        <p class="text-red-500 text-sm font-medium">{{ message }}</p>
-        {% endfor %}
-        <form action="" method="POST" class="space-y-4" onsubmit="return validatePassword()">
+
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+                <p class="text-red-500 text-sm font-medium mb-2">{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <form action="{% url 'signup' %}" method="POST" class="space-y-4" id="signupForm">
             {% csrf_token %}
-            
-            <input type="text" name="username" placeholder="Username" 
-                class="w-full px-4 py-3 border rounded-lg bg-white/70 text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
-            
-            <input type="email" name="email" placeholder="Email" 
-                class="w-full px-4 py-3 border rounded-lg bg-white/70 text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
-            
+
+            <div>
+                {{ form.username }}
+                {% for error in form.username.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ form.email }}
+                {% for error in form.email.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+
             <div class="relative w-full">
-                <input type="password" name="password" id="password" placeholder="Password" minlength="8"
-                    class="w-full px-4 py-3 border rounded-lg bg-white/70 text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400" 
-                    onkeyup="validatePassword()">
+                {{ form.password }}
                 <button type="button" id="togglePassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600">👁️</button>
+                {% for error in form.password.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                {% endfor %}
             </div>
-        
-            <div class="relative w-full">
-                <input type="password" name="passwordc" id="passwordc" placeholder="Confirm Password" minlength="8"
-                    class="w-full px-4 py-3 border rounded-lg bg-white/70 text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400" 
-                    onkeyup="validatePassword()">
+
+            <div>
+                {{ form.passwordc }}
+                {% for error in form.passwordc.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                {% endfor %}
             </div>
-        
+
             <p id="password-validation" class="text-red-500 text-sm"></p>
-        
+
             <div class="flex items-center space-x-2">
-                <input type="checkbox" id="checkbox1" checked class="w-4 h-4">
+                <input type="checkbox" id="checkbox1" checked class="w-4 h-4" required>
                 <label for="checkbox1" class="text-gray-900">I Agree <a href="#" class="text-blue-600 hover:underline">Terms and Conditions</a></label>
             </div>
-        
-            <button type="submit" 
+
+            <button type="submit"
                 class="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition font-semibold">Sign Up</button>
         </form>
-        
-        <script>
-            function validatePassword() {
-                let password = document.getElementById("password").value;
-                let confirmPassword = document.getElementById("passwordc").value;
-                let validationMessage = document.getElementById("password-validation");
-        
-                if (password.length < 8) {
-                    validationMessage.textContent = "Password must be at least 8 characters long.";
-                    return false;
-                } else if (password !== confirmPassword) {
-                    validationMessage.textContent = "Passwords do not match!";
-                    return false;
-                } else {
-                    validationMessage.textContent = "";
-                    return true;
-                }
-            }
-        
-            document.getElementById("togglePassword").addEventListener("click", function() {
-                let passwordField = document.getElementById("password");
-                if (passwordField.type === "password") {
-                    passwordField.type = "text";
-                    this.textContent = "🙈";
-                } else {
-                    passwordField.type = "password";
-                    this.textContent = "👁️";
-                }
-            });
-        </script>
-        
-        <p class="text-sm text-gray-900 mt-4 font-medium">Already have an account? 
-            <a href="/signin" class="text-blue-600 font-semibold hover:underline">Login</a>
+
+        <p class="text-sm text-gray-900 mt-4 font-medium">Already have an account?
+            <a href="{% url 'signin' %}" class="text-blue-600 font-semibold hover:underline">Login</a>
         </p>
     </div>
-</body>
-</html>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const password = document.getElementById('password');
+            const passwordc = document.getElementById('passwordc');
+            const validation = document.getElementById('password-validation');
+            const toggleBtn = document.getElementById('togglePassword');
+
+            function validatePassword() {
+                let msg = '';
+                if (password.value.length > 0 && password.value.length < 8) {
+                    msg = 'Password must be at least 8 characters long.';
+                } else if (password.value && passwordc.value && password.value !== passwordc.value) {
+                    msg = 'Passwords do not match!';
+                }
+                validation.textContent = msg;
+                return msg === '';
+            }
+
+            password.addEventListener('keyup', validatePassword);
+            passwordc.addEventListener('keyup', validatePassword);
+
+            toggleBtn.addEventListener('click', function () {
+                if (password.type === 'password') {
+                    password.type = 'text';
+                    this.textContent = '🙈';
+                } else {
+                    password.type = 'password';
+                    this.textContent = '👁️';
+                }
+            });
+
+            document.getElementById('signupForm').addEventListener('submit', function (e) {
+                if (!validatePassword()) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,58 +1,16 @@
-{% load static %}
+{% extends "base.html" %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In - Tweek</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        body {
-            background: linear-gradient(-45deg, #8EC5FC, #E0C3FC, #FFD3A5, #FF9A9E);
-            background-size: 400% 400%;
-            animation: gradientBG 12s ease infinite;
-        }
-        .bubble {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-            opacity: 0.7;
-            animation: float 10s infinite ease-in-out;
-        }
-        @keyframes float {
-            0% { transform: translateY(0) scale(0.5); opacity: 1; }
-            50% { transform: translateY(-200px) scale(1); opacity: 0.8; }
-            100% { transform: translateY(-400px) scale(0.3); opacity: 0; }
-        }
-    </style>
-</head>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-            for (let i = 0; i < 20; i++) {
-                let bubble = document.createElement("div");
-                bubble.classList.add("bubble");
-                let size = Math.random() * 20 + 10;
-                bubble.style.width = `${size}px`;
-                bubble.style.height = `${size}px`;
-                bubble.style.left = `${Math.random() * 100}vw`;
-                bubble.style.top = `${Math.random() * 100}vh`;
-                bubble.style.animationDuration = `${Math.random() * 5 + 5}s`;
-                document.body.appendChild(bubble);
-            }
-        });
-</script>
-<body class="flex items-center justify-center h-screen">
-    <div class="w-full max-w-md p-8 rounded-xl shadow-lg bg-white/40 backdrop-blur-xl border border-white/20">
+{% block title %}Sign In - Tweek{% endblock %}
+{% block meta_description %}Log in to your Tweek account{% endblock %}
+
+{% block body_class %}flex items-center justify-center min-h-screen{% endblock %}
+
+{% block content %}
+    <div class="w-full max-w-md p-8 rounded-xl shadow-lg bg-white/40 backdrop-blur-xl border border-white/20 relative z-10">
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-gray-900">Tweek</h1>
-            <a href="/signup" class="text-blue-600 font-semibold hover:underline">Register</a>
+            <a href="{% url 'signup' %}" class="text-blue-600 font-semibold hover:underline">Register</a>
         </div>
 
         <!-- Content -->
@@ -60,23 +18,22 @@
 
         <!-- Error Messages -->
         {% for message in messages %}
-        <p class="text-red-500 text-sm font-medium">{{ message }}</p>
+        <p class="text-red-500 text-sm font-medium mb-2">{{ message }}</p>
         {% endfor %}
 
         <!-- Login Form -->
-        <form action="" method="POST" class="space-y-4">
+        <form action="{% url 'signin' %}" method="POST" class="space-y-4">
             {% csrf_token %}
-            <input type="text" name="username" placeholder="Enter your Username or Email" 
+            <input type="text" name="username" placeholder="Enter your Username or Email" required
                 class="w-full px-4 py-3 border rounded-lg bg-white/70 text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
-            <input type="password" name="password" placeholder="Enter Password" 
+            <input type="password" name="password" placeholder="Enter Password" required
                 class="w-full px-4 py-3 border rounded-lg bg-white/70 text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
-            <button type="submit" 
+            <button type="submit"
                 class="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition font-semibold">Login</button>
         </form>
 
-        <p class="text-sm text-gray-900 mt-4 font-medium">Not registered? 
-            <a href="/signup" class="text-blue-600 font-semibold hover:underline">Create an account</a>
+        <p class="text-sm text-gray-900 mt-4 font-medium">Not registered?
+            <a href="{% url 'signup' %}" class="text-blue-600 font-semibold hover:underline">Create an account</a>
         </p>
     </div>
-</body>
-</html>
+{% endblock %}

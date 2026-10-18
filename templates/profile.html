@@ -1,98 +1,69 @@
-{% load static %}
+{% extends "base.html" %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile - {{ user_profile.user.username }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        body {
-            background: linear-gradient(-45deg, #8EC5FC, #E0C3FC, #FFD3A5, #FF9A9E);
-            background-size: 400% 400%;
-            animation: gradientBG 12s ease infinite;
-        }
-        .bubble {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-            opacity: 0.7;
-            animation: float 10s infinite ease-in-out;
-        }
-        @keyframes float {
-            0% { transform: translateY(0) scale(0.5); opacity: 1; }
-            50% { transform: translateY(-200px) scale(1); opacity: 0.8; }
-            100% { transform: translateY(-400px) scale(0.3); opacity: 0; }
-        }
-    </style>
-</head>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-            for (let i = 0; i < 20; i++) {
-                let bubble = document.createElement("div");
-                bubble.classList.add("bubble");
-                let size = Math.random() * 20 + 10;
-                bubble.style.width = `${size}px`;
-                bubble.style.height = `${size}px`;
-                bubble.style.left = `${Math.random() * 100}vw`;
-                bubble.style.top = `${Math.random() * 100}vh`;
-                bubble.style.animationDuration = `${Math.random() * 5 + 5}s`;
-                document.body.appendChild(bubble);
-            }
-        });
-</script>
-<body class="flex flex-col items-center justify-center min-h-screen p-4">
-    
-    <!-- Profile Header -->
-    <header class="w-full p-4 flex justify-between items-center bg-white/40 backdrop-blur-md shadow-lg border-b border-white/20">
+{% block title %}Profile - {{ user_profile.user.username }}{% endblock %}
+{% block meta_description %}{{ user_profile.user.username }}'s profile on Tweek{% endblock %}
+
+{% block content %}
+    <!-- Header -->
+    <header class="w-full p-4 flex justify-between items-center bg-white/40 backdrop-blur-md shadow-lg border-b border-white/20 relative z-10">
         <a href="/" class="text-3xl font-bold text-gray-900 uppercase">Tweek</a>
+        <a href="/" class="px-4 py-2 bg-white/50 text-gray-800 rounded-lg hover:bg-white/70 transition font-medium">← Back to Feed</a>
     </header>
-    
+
     <!-- Profile Info -->
-    <section class="w-full max-w-4xl bg-white/40 backdrop-blur-xl p-6 rounded-xl shadow-lg border border-white/20 mt-6">
+    <section class="w-full max-w-4xl bg-white/40 backdrop-blur-xl p-6 rounded-xl shadow-lg border border-white/20 mt-6 relative z-10">
         <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
-            <img src="{{ user_profile.profileimg.url }}" alt="Profile Picture" class="w-24 h-24 md:w-32 md:h-32 rounded-full border">
+            <img src="{{ user_profile.profileimg.url }}" alt="{{ user_profile.user.username }}"
+                class="w-24 h-24 md:w-32 md:h-32 rounded-full border object-cover">
             <div>
                 <h2 class="text-2xl font-bold text-gray-900">@{{ user_profile.user.username }}</h2>
                 <p class="text-gray-700">{{ user_profile.bio }}</p>
+                {% if user_profile.location %}
+                    <p class="text-gray-500 text-sm mt-1">📍 {{ user_profile.location }}</p>
+                {% endif %}
                 <div class="flex space-x-4 mt-2 text-gray-900 font-semibold">
                     <span>{{ user_post_length }} Post{{ user_post_length|pluralize }}</span>
                     <span>{{ follower_count }} Follower{{ follower_count|pluralize }}</span>
                     <span>{{ following_count }} Following</span>
                 </div>
                 {% if user.username != user_object.username %}
-                    <form method="POST" action="/follow" class="mt-4">
+                    <form method="POST" action="{% url 'follow' %}" class="mt-4">
                         {% csrf_token %}
-                        <input type="hidden" value="{{ user.username }}" name="follower">
                         <input type="hidden" value="{{ user_object.username }}" name="user">
-                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">{{ button_text }}</button>
+                        <button type="submit"
+                            class="px-6 py-2 rounded-lg transition font-semibold
+                            {% if button_text == 'Unfollow' %}
+                                bg-red-500 text-white hover:bg-red-600
+                            {% else %}
+                                bg-blue-500 text-white hover:bg-blue-600
+                            {% endif %}">
+                            {{ button_text }}
+                        </button>
                     </form>
                 {% else %}
-                    <a href="/setting" class="mt-4 inline-block px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">Account Settings</a>
+                    <a href="{% url 'setting' %}"
+                        class="mt-4 inline-block px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">Account Settings</a>
                 {% endif %}
             </div>
         </div>
     </section>
-    
+
     <!-- Posts Section -->
-    <section class="w-full max-w-4xl mt-6">
+    <section class="w-full max-w-4xl mt-6 relative z-10 pb-8">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Posts</h2>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
             {% for post in user_posts %}
                 <div class="bg-white/40 backdrop-blur-xl p-4 rounded-xl shadow-lg border border-white/20">
-                    <a href="{{ post.image.url }}">
-                        <img src="{{ post.image.url }}" alt="Post" class="w-full h-48 object-cover rounded-lg">
+                    <a href="{{ post.image.url }}" target="_blank">
+                        <img src="{{ post.image.url }}" alt="Post by {{ user_profile.user.username }}" class="w-full h-48 object-cover rounded-lg hover:opacity-90 transition">
                     </a>
+                    <p class="mt-2 text-sm text-gray-700 truncate">{{ post.caption }}</p>
+                </div>
+            {% empty %}
+                <div class="col-span-full text-center py-8">
+                    <p class="text-gray-600">No posts yet.</p>
                 </div>
             {% endfor %}
         </div>
     </section>
-    
-</body>
-</html>
+{% endblock %}

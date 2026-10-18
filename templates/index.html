@@ -1,60 +1,16 @@
-{% load static %}
+{% extends "base.html" %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - Tweek</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        body {
-            background: linear-gradient(-45deg, #8EC5FC, #E0C3FC, #FFD3A5, #FF9A9E);
-            background-size: 400% 400%;
-            animation: gradientBG 12s ease infinite;
-        }
-        .bubble {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-            opacity: 0.7;
-            animation: float 10s infinite ease-in-out;
-        }
-        @keyframes float {
-            0% { transform: translateY(0) scale(0.5); opacity: 1; }
-            50% { transform: translateY(-200px) scale(1); opacity: 0.8; }
-            100% { transform: translateY(-400px) scale(0.3); opacity: 0; }
-        }
-    </style>
-</head>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-            for (let i = 0; i < 20; i++) {
-                let bubble = document.createElement("div");
-                bubble.classList.add("bubble");
-                let size = Math.random() * 20 + 10;
-                bubble.style.width = `${size}px`;
-                bubble.style.height = `${size}px`;
-                bubble.style.left = `${Math.random() * 100}vw`;
-                bubble.style.top = `${Math.random() * 100}vh`;
-                bubble.style.animationDuration = `${Math.random() * 5 + 5}s`;
-                document.body.appendChild(bubble);
-            }
-        });
-</script>
-<body class="flex flex-col items-center justify-center min-h-screen">
-    
+{% block title %}Home - Tweek{% endblock %}
+{% block meta_description %}Your Tweek feed — see posts from people you follow{% endblock %}
+
+{% block content %}
     <!-- Header -->
-    <header class="w-full p-4 flex justify-between items-center bg-white/40 backdrop-blur-md shadow-lg border-b border-white/20">
-        <a href="#" class="text-3xl font-bold text-gray-900 uppercase">Tweek</a>
-        <form action="/search" method="POST" class="flex items-center space-x-2 flex-1 max-w-sm">
+    <header class="w-full p-4 flex justify-between items-center bg-white/40 backdrop-blur-md shadow-lg border-b border-white/20 relative z-10">
+        <a href="/" class="text-3xl font-bold text-gray-900 uppercase">Tweek</a>
+        <form action="{% url 'search' %}" method="POST" class="flex items-center space-x-2 flex-1 max-w-sm">
             {% csrf_token %}
-            <input type="text" name="username" placeholder="Search for username" class="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-400 w-full">
+            <input type="text" name="username" placeholder="Search for username" required
+                class="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-400 w-full">
             <button type="submit" class="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
                 🔍
             </button>
@@ -63,163 +19,155 @@
             <button id="uploadBtn" class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition-all transform hover:scale-105">Upload</button>
 
             <button id="profileBtn" class="focus:outline-none">
-                <img src="{{ user_profile.profileimg.url }}" alt="profile pic" class="w-10 h-10 rounded-full border">
+                <img src="{{ user_profile.profileimg.url }}" alt="profile pic" class="w-10 h-10 rounded-full border object-cover">
             </button>
-            
+
             <!-- Profile Dropdown -->
-            <div id="profileDropdown" class="hidden absolute right-10 top-0.5 mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
-                <a href="/setting" class="block px-4 py-2 text-gray-800 hover:bg-gray-200">Account Setting</a>
-                <a href="/logout" class="block px-4 py-2 text-red-600 hover:bg-gray-200">Log Out</a>
+            <div id="profileDropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
+                <a href="{% url 'profile' request.user.username %}" class="block px-4 py-2 text-gray-800 hover:bg-gray-200">My Profile</a>
+                <a href="{% url 'setting' %}" class="block px-4 py-2 text-gray-800 hover:bg-gray-200">Account Settings</a>
+                <a href="{% url 'logout' %}" class="block px-4 py-2 text-red-600 hover:bg-gray-200">Log Out</a>
             </div>
         </div>
     </header>
 
-        <!-- Upload Section (Dropdown) -->
-
+    <!-- Upload Modal -->
     <div id="uploadSection" class="hidden fixed inset-0 flex items-center justify-center bg-black/50 z-50">
         <div class="bg-white/40 backdrop-blur-xl p-6 rounded-xl shadow-lg border border-white/20 w-96 relative">
             <h2 class="text-xl font-semibold text-gray-900 text-center">Upload</h2>
-            <form action="upload" method="POST" enctype="multipart/form-data" class="mt-4">
+            <form action="{% url 'upload' %}" method="POST" enctype="multipart/form-data" class="mt-4" id="uploadForm">
                 {% csrf_token %}
-                <input type="file" name="image_upload" class="w-full p-2 border rounded-lg bg-white/70 text-gray-900 focus:ring-2 focus:ring-blue-400">
-                <textarea name="caption" placeholder="Caption..." class="w-full mt-2 p-2 border rounded-lg bg-white/70 text-gray-900 focus:ring-2 focus:ring-blue-400"></textarea>
-                <button type="submit" class="mt-2 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-all transform hover:scale-105 font-semibold">Upload</button>
+                <input type="file" name="image_upload" required
+                    class="w-full p-2 border rounded-lg bg-white/70 text-gray-900 focus:ring-2 focus:ring-blue-400">
+                <textarea name="caption" placeholder="Caption..."
+                    class="w-full mt-2 p-2 border rounded-lg bg-white/70 text-gray-900 focus:ring-2 focus:ring-blue-400"></textarea>
+                <button type="submit"
+                    class="mt-2 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-all transform hover:scale-105 font-semibold">Upload</button>
             </form>
-            <button id="closeUpload" class="mt-2 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-all">Cancel</button>
+            <button id="closeUpload"
+                class="mt-2 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-all">Cancel</button>
         </div>
     </div>
 
-    
     <!-- Main Content -->
-     
-    <div class="w-full max-w-6xl flex flex-col md:flex-row mt-6 gap-6 px-4">
+    <div class="w-full max-w-6xl flex flex-col md:flex-row mt-6 gap-6 px-4 relative z-10">
 
-        
-        <!-- Left Sidebar (Posts) -->
+        <!-- Left — Posts Feed -->
         <div class="flex-1 space-y-6">
-            {% for post in posts reversed %}
+            {% for post in posts %}
             <div class="bg-white/40 backdrop-blur-xl p-6 rounded-xl shadow-lg border border-white/20">
                 <div class="flex items-center justify-between">
-                    <a href="/profile/{{post.user}}" class="flex items-center space-x-2">
-                        <img src="/media/{{post.post_profile}}" class="w-12 h-12 rounded-full border">
-                        <span class="font-bold text-gray-900">@{{post.user}}</span>
+                    <a href="{% url 'profile' post.user.username %}" class="flex items-center space-x-2">
+                        <img src="{{ post.user.profile.profileimg.url }}" class="w-12 h-12 rounded-full border object-cover" alt="{{ post.user.username }}">
+                        <span class="font-bold text-gray-900">@{{ post.user.username }}</span>
                     </a>
-                    <a href="#" class="text-gray-500 hover:text-gray-700">⋮</a>
                 </div>
                 <div class="mt-4">
                     {% if post.image.url|slice:"-4:" == ".mp4" %}
                         <video class="w-full rounded-lg" controls>
-                            <source src="{{post.image.url}}" type="video/mp4">
+                            <source src="{{ post.image.url }}" type="video/mp4">
                         </video>
                     {% else %}
-                        <img src="{{post.image.url}}" alt="post" class="w-full rounded-lg">
+                        <img src="{{ post.image.url }}" alt="post" class="w-full rounded-lg">
                     {% endif %}
                 </div>
                 <div class="mt-4">
-                    <a href="/like_post?post_id={{post.id}}" class="flex items-center space-x-2">
-                        ❤️ <span>{{ post.no_of_likes }} Likes</span>
-                    </a>
+                    <form method="POST" action="{% url 'like_post' %}" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="post_id" value="{{ post.id }}">
+                        <button type="submit" class="flex items-center space-x-2 hover:opacity-80 transition">
+                            ❤️ <span>{{ post.no_of_likes }} Like{{ post.no_of_likes|pluralize }}</span>
+                        </button>
+                    </form>
                     <p class="mt-2 text-gray-900">
-                        <a href="/profile/{{post.user}}" class="font-bold">{{post.user}}</a> {{post.caption}}
+                        <a href="{% url 'profile' post.user.username %}" class="font-bold">{{ post.user.username }}</a> {{ post.caption }}
                     </p>
                 </div>
             </div>
+            {% empty %}
+            <div class="bg-white/40 backdrop-blur-xl p-8 rounded-xl shadow-lg border border-white/20 text-center">
+                <p class="text-gray-700 text-lg">Your feed is empty. Follow some users to see their posts!</p>
+            </div>
             {% endfor %}
         </div>
-        
-        <!-- Right Sidebar (Upload & Suggestions) -->
+
+        <!-- Right Sidebar — Suggestions -->
         <div class="w-full md:w-80 space-y-6">
-            
-            <!-- Suggestions Section -->
             <div class="bg-white/40 backdrop-blur-xl p-6 rounded-xl shadow-lg border border-white/20">
                 <h2 class="text-xl font-semibold text-gray-900">Users You Can Follow</h2>
                 <div class="mt-4 space-y-4">
                     {% for suggestion in suggestions_username_profile_list %}
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
-                            <a href="/profile/{{suggestion.user}}">
-                                <img src="{{ suggestion.profileimg.url}}" class="w-10 h-10 rounded-full border">
+                            <a href="{% url 'profile' suggestion.user.username %}">
+                                <img src="{{ suggestion.profileimg.url }}" class="w-10 h-10 rounded-full border object-cover" alt="{{ suggestion.user.username }}">
                             </a>
                             <div>
-                                <span class="font-bold text-gray-900">{{suggestion.user}}</span>
-                                <p class="text-sm text-gray-600">{{suggestion.location}}</p>
+                                <span class="font-bold text-gray-900">{{ suggestion.user.username }}</span>
+                                <p class="text-sm text-gray-600">{{ suggestion.location }}</p>
                             </div>
                         </div>
-                        <a href="/profile/{{suggestion.user}}" class="bg-blue-500 text-white px-4 py-1 rounded-lg hover:bg-blue-600 transition">Follow</a>
+                        <a href="{% url 'profile' suggestion.user.username %}" class="bg-blue-500 text-white px-4 py-1 rounded-lg hover:bg-blue-600 transition text-sm">Follow</a>
                     </div>
+                    {% empty %}
+                    <p class="text-gray-600 text-sm">No suggestions right now.</p>
                     {% endfor %}
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- JavaScript for Dropdowns -->
+{% endblock %}
 
+{% block extra_scripts %}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const uploadBtn = document.getElementById('uploadBtn');
             const uploadSection = document.getElementById('uploadSection');
             const closeUpload = document.getElementById('closeUpload');
-    
-            // Show Upload Section
-            uploadBtn.addEventListener('click', function () {
-                uploadSection.classList.remove('hidden');
+            const profileBtn = document.getElementById('profileBtn');
+            const profileDropdown = document.getElementById('profileDropdown');
+            const uploadForm = document.getElementById('uploadForm');
+
+            // Upload modal toggle
+            uploadBtn.addEventListener('click', () => uploadSection.classList.remove('hidden'));
+            closeUpload.addEventListener('click', () => uploadSection.classList.add('hidden'));
+            uploadSection.addEventListener('click', (e) => {
+                if (e.target === uploadSection) uploadSection.classList.add('hidden');
             });
-    
-            // Close Upload Section
-            closeUpload.addEventListener('click', function () {
-                uploadSection.classList.add('hidden');
+
+            // Profile dropdown toggle
+            profileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                profileDropdown.classList.toggle('hidden');
             });
-    
-            // Close when clicking outside
-            uploadSection.addEventListener('click', function (event) {
-                if (event.target === uploadSection) {
-                    uploadSection.classList.add('hidden');
+            document.addEventListener('click', () => profileDropdown.classList.add('hidden'));
+
+            // Client-side upload validation
+            const maxSizeMB = 5;
+            const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'mp4'];
+
+            uploadForm.addEventListener('submit', function (e) {
+                const fileInput = uploadForm.querySelector('input[name="image_upload"]');
+                const file = fileInput.files[0];
+
+                if (!file) {
+                    alert('Please select a file to upload.');
+                    e.preventDefault();
+                    return;
                 }
-            });
-        });
-    </script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const uploadInput = document.querySelector('input[name="image_upload"]');
-        const uploadForm = document.querySelector('form[action="upload"]');
-        const maxSizeMB = 5;
-        const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'mp4'];
-
-        uploadForm.addEventListener('submit', function (e) {
-            const file = uploadInput.files[0];
-
-            if (file) {
                 const fileExt = file.name.split('.').pop().toLowerCase();
                 if (!allowedExtensions.includes(fileExt)) {
-                    alert("Invalid file type! Allowed: " + allowedExtensions.join(", "));
+                    alert('Invalid file type! Allowed: ' + allowedExtensions.join(', '));
                     e.preventDefault();
                     return;
                 }
 
                 if (file.size > maxSizeMB * 1024 * 1024) {
-                    alert("File size must be under " + maxSizeMB + "MB.");
+                    alert('File size must be under ' + maxSizeMB + 'MB.');
                     e.preventDefault();
-                    return;
                 }
-            } else {
-                alert("Please select a file to upload.");
-                e.preventDefault();
-            }
-        });
-    });
-</script>
-
-    
-    <script>
-        document.getElementById('uploadBtn').addEventListener('click', function() {
-            document.getElementById('uploadSection').classList.toggle('hidden');
-        });
-        document.getElementById('profileBtn').addEventListener('click', function() {
-            document.getElementById('profileDropdown').classList.toggle('hidden');
+            });
         });
     </script>
-    
-</body>
-</html>
+{% endblock %}

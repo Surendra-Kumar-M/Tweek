@@ -1,197 +1,77 @@
-{% load static %}
+{% extends "base.html" %}
 
-<!DOCTYPE html>
-<html lang="en">
+{% block title %}Search - Tweek{% endblock %}
+{% block meta_description %}Search for users on Tweek{% endblock %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search</title>
-    <!-- <link rel="stylesheet" href="{% static 'css/style.css' %}"> -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        body {
-            background: linear-gradient(-45deg, #8EC5FC, #E0C3FC, #FFD3A5, #FF9A9E);
-            background-size: 400% 400%;
-            animation: gradientBG 12s ease infinite;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .container {
-            width: 90%;
-            max-width: 800px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            position: relative;
-            z-index: 2;
-        }
-        .bubble {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-            opacity: 0.7;
-            animation: float 10s infinite ease-in-out;
-        }
-        @keyframes float {
-            0% { transform: translateY(0) scale(0.5); opacity: 1; }
-            50% { transform: translateY(-200px) scale(1); opacity: 0.8; }
-            100% { transform: translateY(-400px) scale(0.3); opacity: 0; }
-        }
-        .search-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-}
+{% block extra_styles %}
+    .search-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        transition: background 0.2s;
+    }
+    .search-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+    }
+    .search-item:last-child {
+        border-bottom: none;
+    }
+{% endblock %}
 
-.profile-img {
-    width: 40px;  /* Small image size */
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.user-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.user-info h4 {
-    margin: 0;
-    font-size: 16px;
-}
-
-.user-info p {
-    margin: 0;
-    font-size: 12px;
-    color: #ddd;
-}
-
-    </style>
-</head>
-
-<body>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            for (let i = 0; i < 20; i++) {
-                let bubble = document.createElement("div");
-                bubble.classList.add("bubble");
-                let size = Math.random() * 20 + 10;
-                bubble.style.width = `${size}px`;
-                bubble.style.height = `${size}px`;
-                bubble.style.left = `${Math.random() * 100}vw`;
-                bubble.style.top = `${Math.random() * 100}vh`;
-                bubble.style.animationDuration = `${Math.random() * 5 + 5}s`;
-                document.body.appendChild(bubble);
-            }
-        });
-    </script>
-
-    <div class="container">
-        <header class="w-full p-4 flex justify-between items-center bg-white/40 backdrop-blur-md shadow-lg border-b border-white/20">
-            <nav class="navbar">
-                <a href="/" class="text-3xl font-bold text-gray-900 uppercase">Tweek</a>
-                <form action="{% url 'search' %}" method="POST" class="search-form">
-                    {% csrf_token %}
-                    <input type="text" id="search-input" name="username" placeholder="Search for username or posts">
-                    <button type="submit">Search</button>
-                </form>
-                <div id="search-suggestions" class="suggestions"></div>
-            </nav>
+{% block content %}
+    <div class="w-full max-w-3xl mx-auto px-4 py-6 relative z-10">
+        <!-- Header -->
+        <header class="w-full p-4 flex justify-between items-center bg-white/40 backdrop-blur-md shadow-lg border-b border-white/20 rounded-t-xl">
+            <a href="/" class="text-3xl font-bold text-gray-900 uppercase">Tweek</a>
+            <form action="{% url 'search' %}" method="POST" class="flex items-center space-x-2 flex-1 max-w-sm ml-4">
+                {% csrf_token %}
+                <input type="text" name="username" placeholder="Search for username" value="{{ username }}" required
+                    class="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-400 w-full">
+                <button type="submit" class="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                    🔍
+                </button>
+            </form>
         </header>
 
-        <main>
-            <section class="search-results">
-                <h4>Results For <span><b>{{username}}</b></span></h4>
-                <br>
-                <select id="sort-options">
-                    <option value="relevance">Sort by Relevance</option>
-                    <option value="followers">Sort by Followers</option>
-                    <option value="activity">Sort by Activity</option>
-                </select>
-                <div id="search-results">
-                    {% for user in username_profile_list %}
-                    <div class="search-item">
-                        <a href="/profile/{{ user.user }}">
-                            <img class="profile-img" src="{{ user.profileimg.url }}" alt="{{ user.user }}">
+        <!-- Results -->
+        <main class="bg-white/30 backdrop-blur-xl p-6 rounded-b-xl shadow-lg border border-white/20 border-t-0">
+            {% if username %}
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    Results for <span class="text-blue-600">"{{ username }}"</span>
+                </h3>
+
+                {% for profile in username_profile_list %}
+                <div class="search-item">
+                    <a href="{% url 'profile' profile.user.username %}">
+                        <img src="{{ profile.profileimg.url }}" alt="{{ profile.user.username }}"
+                            class="w-12 h-12 rounded-full border object-cover">
+                    </a>
+                    <div class="flex-1">
+                        <a href="{% url 'profile' profile.user.username %}" class="font-bold text-gray-900 hover:underline">
+                            @{{ profile.user.username }}
                         </a>
-                        <div class="user-info">
-                            <h4><a href="/profile/{{ user.user }}">@{{ user.user }}</a></h4>
-                            <p>{{ user.location }}</p>
-                        </div>
+                        {% if profile.location %}
+                            <p class="text-sm text-gray-600">📍 {{ profile.location }}</p>
+                        {% endif %}
                     </div>
-                    {% endfor %}
+                    <a href="{% url 'profile' profile.user.username %}"
+                        class="bg-blue-500 text-white px-4 py-1 rounded-lg hover:bg-blue-600 transition text-sm font-medium">
+                        View
+                    </a>
                 </div>
-
-                <div id="post-results">
-                    {% for post in post_search_results %}
-                    <div class="post-item">
-                        <a href="/post/{{post.id}}">
-                            <img src="{{post.image.url}}" alt="Post Image" class="post-img">
-                        </a>
-                        <p>{{ post.caption }}</p>
-                    </div>
-                    {% endfor %}
+                {% empty %}
+                <div class="text-center py-8">
+                    <p class="text-gray-600">No users found matching "{{ username }}".</p>
                 </div>
-            </section>
-
-            <section class="pagination">
-                {% if username_profile_list.has_other_pages %}
-                <div class="pagination-controls">
-                    {% if username_profile_list.has_previous %}
-                    <a href="?page={{ username_profile_list.previous_page_number }}" class="btn">Previous</a>
-                    {% endif %}
-
-                    {% for num in username_profile_list.paginator.page_range %}
-                    {% if num == username_profile_list.number %}
-                    <strong class="current-page">{{ num }}</strong>
-                    {% else %}
-                    <a href="?page={{ num }}" class="btn">{{ num }}</a>
-                    {% endif %}
-                    {% endfor %}
-
-                    {% if username_profile_list.has_next %}
-                    <a href="?page={{ username_profile_list.next_page_number }}" class="btn">Next</a>
-                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-8">
+                    <p class="text-gray-600">Enter a username above to search.</p>
                 </div>
-                {% endif %}
-            </section>
+            {% endif %}
         </main>
     </div>
-
-    <script>
-        $(document).ready(function () {
-            $('#search-input').on('keyup', function () {
-                let query = $(this).val();
-                if (query.length > 2) {
-                    $.ajax({
-                        url: '/live-search/',
-                        method: 'GET',
-                        data: { 'query': query },
-                        success: function (data) {
-                            $('#search-suggestions').html(data);
-                        }
-                    });
-                } else {
-                    $('#search-suggestions').html('');
-                }
-            });
-        });
-    </script>
-</body>
-
-</html>
+{% endblock %}
